@@ -1,47 +1,70 @@
-class DSU:
-    def __init__(self, n):
-        # Initially every node is its own parent
-        self.parent = list(range(n))
+n = 10
 
-        # Rank = approximate tree height
-        self.rank = [0] * n
-
-    def find(self, x):
-        # If x is not the root
-        if self.parent[x] != x:
-            # Path Compression:
-            # Make x directly point to the ultimate root
-            self.parent[x] = self.find(self.parent[x])
-
-        return self.parent[x]
-
-    def union(self, u, v):
-        root_u = self.find(u)
-        root_v = self.find(v)
-
-        # Already in same component
-        if root_u == root_v:
-            return
-
-        # Attach smaller rank tree under larger rank tree
-        if self.rank[root_u] < self.rank[root_v]:
-            self.parent[root_u] = root_v
-
-        elif self.rank[root_u] > self.rank[root_v]:
-            self.parent[root_v] = root_u
-
-        else:
-            # Same rank
-            self.parent[root_v] = root_u
-            self.rank[root_u] += 1
+parent = list(range(n))
+rank = [0] * n      # for union by rank
+size = [1] * n      # for union by size
 
 
-dsu = DSU(5)
+def find(x):
+    if parent[x] != x:
+        parent[x] = find(parent[x])   # Path Compression
+    return parent[x]
 
-dsu.union(0, 1)
-dsu.union(1, 2)
 
-print(dsu.find(0))  # root
-print(dsu.find(2))  # same root
+# --------------------------------
+# Union by Rank
+# --------------------------------
+def union_by_rank(u, v):
+    pu = find(u)
+    pv = find(v)
 
-print(dsu.find(3))  # separate component
+    if pu == pv:
+        return False
+
+    if rank[pu] < rank[pv]:
+        parent[pu] = pv
+
+    elif rank[pu] > rank[pv]:
+        parent[pv] = pu
+
+    else:
+        parent[pv] = pu
+        rank[pu] += 1
+
+    return True
+
+
+# --------------------------------
+# Union by Size
+# --------------------------------
+def union_by_size(u, v):
+    pu = find(u)
+    pv = find(v)
+
+    if pu == pv:
+        return False
+
+    if size[pu] < size[pv]:
+        pu, pv = pv, pu
+
+    parent[pv] = pu
+    size[pu] += size[pv]
+
+    return True
+
+# Check if two nodes belong to same component
+def same(u, v):
+    return find(u) == find(v)
+
+
+# Size of component containing node x
+def component_size(x):
+    return size[find(x)]
+
+
+union_by_size(0, 1)
+union_by_size(1, 2)
+
+print(find(0))
+print(find(2))
+print(component_size(0))   # 3
